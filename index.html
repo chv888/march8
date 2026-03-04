@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>С 8 марта!</title>
+  <style>
+    :root{
+      --bg1:#fff5f8;
+      --bg2:#fce8f0;
+      --bg3:#f8f0ff;
+      --card: rgba(255,255,255,.82);
+      --txt:#3d2a35;
+      --muted:#7a6574;
+      --a1:#e91e63;
+      --a2:#ffb74d;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0; min-height:100vh; display:grid; place-items:center;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+      color:var(--txt);
+      background:
+        radial-gradient(ellipse 90% 70% at 70% 20%, rgba(255,182,193,.5) 0%, transparent 55%),
+        radial-gradient(ellipse 80% 60% at 20% 80%, rgba(255,218,235,.6) 0%, transparent 50%),
+        radial-gradient(ellipse 70% 50% at 85% 70%, rgba(255,236,210,.5) 0%, transparent 45%),
+        linear-gradient(165deg, var(--bg1) 0%, var(--bg2) 45%, var(--bg3) 100%);
+      overflow:hidden;
+    }
+
+    .glow{
+      position: fixed; inset:0; z-index:0; pointer-events:none;
+      background:
+        radial-gradient(180px 180px at 15% 25%, rgba(233,30,99,.12), transparent 45%),
+        radial-gradient(160px 160px at 75% 20%, rgba(255,183,77,.15), transparent 45%),
+        radial-gradient(140px 140px at 25% 75%, rgba(255,192,203,.2), transparent 45%),
+        radial-gradient(150px 150px at 88% 80%, rgba(255,218,235,.18), transparent 45%);
+      animation: drift 8s ease-in-out infinite alternate, glowPulse 5s ease-in-out infinite;
+    }
+    @keyframes drift{ from{ transform: translateY(-6px);} to{ transform: translateY(6px);} }
+    @keyframes glowPulse{ 0%,100%{ opacity: .9;} 50%{ opacity: 1;} }
+
+    canvas#hearts, canvas#sparkles, canvas#confetti{
+      position:fixed; inset:0; pointer-events:none; z-index:1;
+    }
+
+    .card{
+      width:min(920px, 92vw);
+      background: var(--card);
+      border: 1px solid rgba(233,30,99,.12);
+      backdrop-filter: blur(12px);
+      border-radius: 18px;
+      padding: 26px;
+      box-shadow: 0 8px 32px rgba(180,100,120,.15), 0 2px 8px rgba(0,0,0,.06);
+      position: relative;
+      z-index: 2;
+      overflow:hidden;
+    }
+    .card:before{
+      content:"";
+      position:absolute; inset:-2px;
+      background:
+        radial-gradient(400px 160px at 20% 0%, rgba(233,30,99,.08), transparent 55%),
+        radial-gradient(380px 140px at 85% 10%, rgba(255,183,77,.1), transparent 55%);
+      filter: blur(2px);
+      z-index:0;
+    }
+    .card > *{ position:relative; z-index:1; }
+
+    h1{ margin:0 0 8px; font-size: clamp(22px, 3.2vw, 34px); }
+    p{ margin:0 0 18px; color: var(--muted); line-height:1.45; }
+
+    .row{ display:flex; gap:12px; flex-wrap:wrap; margin-top: 10px; }
+    input{
+      flex:1 1 260px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(233,30,99,.2);
+      outline: none;
+      background: rgba(255,255,255,.7);
+      color: var(--txt);
+      font-size: 16px;
+    }
+    button{
+      flex:0 0 auto;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--a1), var(--a2));
+      color:#1a1020;
+      font-weight: 900;
+      font-size: 16px;
+      transition: transform .08s ease;
+    }
+    button:active{ transform: scale(.98); }
+
+    .hidden{ display:none !important; }
+
+    .reveal{
+      margin-top: 18px;
+      padding: 16px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(233,30,99,.1);
+      background: rgba(255,255,255,.5);
+      overflow:hidden;
+      animation: revealIn 0.6s ease-out;
+    }
+    @keyframes revealIn{
+      from{ opacity: 0; transform: translateY(20px) scale(0.97); }
+      to{ opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .reveal-with-photo{
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      position: relative;
+    }
+    .greeting-content{ flex: 1 1 280px; min-width: 0; }
+    .greeting-content .music-wrap{
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(233,30,99,.12);
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+    }
+    body.theme-dark .greeting-content .music-wrap{ border-top-color: rgba(255,255,255,.1); }
+    .photo-block{
+      flex: 0 0 auto;
+      width: min(280px, 100%);
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid rgba(233,30,99,.12);
+      background: rgba(255,255,255,.4);
+      position: relative;
+      aspect-ratio: 3/4;
+    }
+    .greeting-photo{
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .greeting-photo[src=""]{ display: none; }
+    .photo-placeholder{
+      position: absolute;
+      inset: 0;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 14px;
+      text-align: center;
+      padding: 20px;
+    }
+    .photo-block.has-photo .photo-placeholder{ display: none; }
+    .photo-block.has-photo .greeting-photo{ display: block; }
+    .big{
+      font-size: clamp(18px, 2.6vw, 26px);
+      margin: 0 0 10px;
+      font-weight: 950;
+    }
+    .text{
+      font-size: 16px;
+      line-height: 1.6;
+      white-space: pre-line;
+      color: var(--txt);
+    }
+
+    .centerHeart{
+      width: 66px; height:66px;
+      filter: drop-shadow(0 8px 18px rgba(255,77,125,.35));
+      animation: pulse 1.2s ease-in-out infinite;
+      display:block;
+      margin: 6px 0 10px;
+    }
+    @keyframes pulse{ 0%,100%{transform:scale(1)} 50%{transform:scale(1.12)} }
+
+    .hint{
+      margin-top: 12px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .hint b{ color: var(--txt); }
+
+    .theme-toggle{
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      z-index: 10;
+      padding: 8px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,.3);
+      background: rgba(255,255,255,.25);
+      backdrop-filter: blur(8px);
+      color: var(--txt);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s, transform .08s;
+    }
+    .theme-toggle:hover{ background: rgba(255,255,255,.4); }
+    .theme-toggle:active{ transform: scale(.97); }
+    body.theme-dark .theme-toggle{
+      background: rgba(0,0,0,.25);
+      border-color: rgba(255,255,255,.15);
+      color: #e9ecff;
+    }
+    body.theme-dark .theme-toggle:hover{ background: rgba(0,0,0,.4); }
+
+    .music-toggle{
+      padding: 8px 10px;
+      min-width: 40px;
+      min-height: 40px;
+      border-radius: 50%;
+      border: 1px solid rgba(233,30,99,.15);
+      background: rgba(255,255,255,.35);
+      color: var(--txt);
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .2s, transform .08s;
+      opacity: 0.85;
+    }
+    .music-toggle:hover{ background: rgba(255,255,255,.5); opacity: 1; }
+    .music-toggle:active{ transform: scale(.96); }
+    body.theme-dark .music-toggle{
+      background: rgba(255,255,255,.06);
+      border-color: rgba(255,77,125,.2);
+      color: #e9ecff;
+      opacity: 0.8;
+    }
+    body.theme-dark .music-toggle:hover{ background: rgba(255,255,255,.1); opacity: 1; }
+
+    /* Тёмная тема */
+    body.theme-dark{
+      --bg1:#0b1020;
+      --bg2:#1b1f3a;
+      --bg3:#1b1f3a;
+      --card: rgba(17,22,42,.78);
+      --txt:#e9ecff;
+      --muted:#aab0d6;
+      --a1:#ff4d7d;
+      --a2:#ffb84d;
+    }
+    body.theme-dark{
+      background:
+        radial-gradient(1000px 600px at 20% 20%, #2a2f63 0%, transparent 60%),
+        radial-gradient(900px 600px at 80% 30%, #6a2a5d 0%, transparent 55%),
+        linear-gradient(160deg, var(--bg1), var(--bg2));
+    }
+    body.theme-dark .glow{
+      background:
+        radial-gradient(120px 120px at 12% 22%, rgba(255,77,125,.25), transparent 50%),
+        radial-gradient(100px 100px at 28% 70%, rgba(255,184,77,.18), transparent 50%),
+        radial-gradient(110px 110px at 80% 35%, rgba(255,255,255,.22), transparent 50%),
+        radial-gradient(90px 90px at 66% 82%, rgba(255,77,125,.15), transparent 50%);
+    }
+    body.theme-dark .card{
+      border-color: rgba(255,255,255,.1);
+      box-shadow: 0 20px 60px rgba(0,0,0,.45);
+    }
+    body.theme-dark .card:before{
+      background:
+        radial-gradient(520px 180px at 20% 0%, rgba(255,77,125,.35), transparent 60%),
+        radial-gradient(560px 200px at 80% 20%, rgba(255,184,77,.26), transparent 60%);
+    }
+    body.theme-dark input{
+      border-color: rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+    }
+    body.theme-dark .reveal{
+      border-color: rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+    }
+    body.theme-dark .photo-block{
+      border-color: rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+    }
+  </style>
+</head>
+<body>
+  <button type="button" class="theme-toggle" id="themeToggle" title="Сменить фон">Светлый фон</button>
+  <div class="glow"></div>
+  <canvas id="sparkles"></canvas>
+  <canvas id="hearts"></canvas>
+  <canvas id="confetti"></canvas>
+
+  <main class="card">
+    <h1>💐 Персональное поздравление к 8 марта</h1>
+    <p>Введите вашу корпоративную почту — откроется персональное поздравление.</p>
+
+    <div class="row" id="form">
+      <input id="emailInput" type="email" placeholder="например: name@skillbox.ru" autocomplete="email" />
+      <button id="openBtn">Открыть</button>
+    </div>
+
+    <section id="result" class="hidden">
+      <div class="reveal reveal-with-photo">
+        <div class="greeting-content">
+          <svg class="centerHeart" viewBox="0 0 64 64" aria-hidden="true">
+            <defs>
+              <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#ff4d7d"/>
+                <stop offset="1" stop-color="#ffb84d"/>
+              </linearGradient>
+            </defs>
+            <path fill="url(#grad)" d="M32 56s-18-10.6-24.3-22.2C2.7 23.2 8.3 14 18 14c5.3 0 9.2 2.9 11.4 6.2C31.6 16.9 35.5 14 40.8 14c9.7 0 15.3 9.2 10.3 19.8C50 45.4 32 56 32 56z"/>
+          </svg>
+
+          <div class="big" id="titleLine"></div>
+          <div class="text" id="textLine"></div>
+
+          <div class="hint" id="hint">
+            Если музыка не включилась сама — просто <b>кликни по странице</b> (ограничение браузера).
+          </div>
+          <div class="music-wrap">
+            <button type="button" class="music-toggle" id="musicToggle" title="Выключить музыку" aria-label="Выключить музыку">
+              <span id="musicToggleIcon">🔊</span>
+            </button>
+          </div>
+        </div>
+        <div class="photo-block">
+          <img id="greetingPhoto" src="" alt="Поздравительное фото" class="greeting-photo" />
+          <p class="photo-placeholder" id="photoPlaceholder">Фото сгенерировано нейросетью</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Музыка (опционально). Положи рядом music.mp3 -->
+  <audio id="music" loop preload="auto">
+    <source src="music.mp3" type="audio/mpeg" />
+  </audio>
+
+  <script>
+    // ===== ТАБЛИЦА: почта → имя, текст поздравления (между "Дорогая ..." и подписью), опционально фото =====
+    const COLLEAGUES_TABLE = [
+      { email: "test@skillbox.ru", name: "Имя", text: "Поздравляем с 8 марта 🌸\nУспехов и вдохновения!", photoUrl: "photos/0.png" },
+      { email: "ekaterina.sinkova@skillbox.ru", name: "Екатерина", text: "Поздравляем с 8 марта 🌸\nСпасибо за твою энергию, внимательность и то, что ты делаешь наш общий результат сильнее.\nПусть будет больше радости, лёгкости и приятных сюрпризов — и дома, и на работе.", photoUrl: "" },
+      { email: "natalya.kozlova@skillbox.ru", name: "Наталья", text: "Поздравляем с 8 марта 🌸\nСпасибо за твою энергию и то, что ты делаешь наш общий результат сильнее.\nПусть будет больше радости и приятных сюрпризов!", photoUrl: "" },
+      { email: "elena.shtumpf@skillbox.ru", name: "Елена", text: "Поздравляем с 8 марта 🌸\nПусть будет больше радости, лёгкости и вдохновения — и дома, и на работе.", photoUrl: "" },
+      { email: "anastasiya.suprun@skillbox.ru", name: "Анастасия", text: "Поздравляем с 8 марта 🌸\nСпасибо за твою энергию и то, что ты с нами. Успехов и вдохновения!", photoUrl: "" },
+      { email: "valeriya.ustyan@skillbox.ru", name: "Валерия", text: "Поздравляем с 8 марта 🌸\nПусть будет больше радости и приятных сюрпризов. С теплом!", photoUrl: "" },
+      { email: "oksana@skillbox.ru", name: "Оксана", text: "Поздравляем с 8 марта 🌸\nУспехов и вдохновения!", photoUrl: "" },
+      { email: "diana@skillbox.ru", name: "Диана", text: "Поздравляем с 8 марта 🌸\nПусть будет больше радости и лёгкости!", photoUrl: "" },
+      { email: "aleksandra@skillbox.ru", name: "Александра", text: "Поздравляем с 8 марта 🌸\nСпасибо за твою энергию. Успехов и вдохновения!", photoUrl: "" },
+      { email: "naira@skillbox.ru", name: "Наира", text: "Поздравляем с 8 марта 🌸\nПусть будет больше радости и приятных сюрпризов!", photoUrl: "" },
+      { email: "tatiana@skillbox.ru", name: "Татьяна", text: "Поздравляем с 8 марта 🌸\nУспехов и вдохновения!", photoUrl: "" },
+      { email: "alena@skillbox.ru", name: "Алена", text: "Поздравляем с 8 марта 🌸\nПусть будет больше радости и лёгкости!", photoUrl: "" },
+      { email: "marina@skillbox.ru", name: "Марина", text: "Поздравляем с 8 марта 🌸\nСпасибо за то, что ты с нами. Успехов!", photoUrl: "" },
+      { email: "svetlana@skillbox.ru", name: "Светлана", text: "Поздравляем с 8 марта 🌸\nПусть будет больше радости и вдохновения!", photoUrl: "" },
+      { email: "kristina@skillbox.ru", name: "Кристина", text: "Поздравляем с 8 марта 🌸\nУспехов и приятных сюрпризов!", photoUrl: "" },
+      { email: "darya@skillbox.ru", name: "Дарья", text: "Поздравляем с 8 марта 🌸\nПусть будет больше радости и лёгкости!", photoUrl: "" }
+    ];
+
+    const SIGNATURE = "С теплом,\nваши коллеги ❤️";
+    // Общее фото (портрет с цветами в стиле открытки) — файл 0 в папке проекта
+    const DEFAULT_GREETING_PHOTO = "photos/0.png";
+
+    const $ = (id) => document.getElementById(id);
+    const emailInput = $("emailInput");
+    const openBtn   = $("openBtn");
+    const result    = $("result");
+    const titleLine = $("titleLine");
+    const textLine  = $("textLine");
+    const hint      = $("hint");
+    const music     = $("music");
+    const greetingPhoto = $("greetingPhoto");
+    const photoBlock = document.querySelector(".photo-block");
+
+    function findColleague(email){
+      const normalized = (email || "").trim().toLowerCase();
+      return COLLEAGUES_TABLE.find(r => r.email.toLowerCase() === normalized);
+    }
+
+    function showGreeting(email){
+      const colleague = findColleague(email);
+      const name = colleague ? colleague.name : "коллега";
+      const customText = colleague && colleague.text
+        ? colleague.text
+        : "Поздравляем с 8 марта 🌸\nПусть будет больше радости, лёгкости и приятных сюрпризов — и дома, и на работе.";
+      const fullMessage = `Дорогая ${name}!\n\n${customText}\n\n${SIGNATURE}`;
+
+      titleLine.textContent = `${name}, с 8 марта! ✨`;
+      textLine.textContent  = fullMessage;
+
+      if (greetingPhoto && photoBlock) {
+        const photoUrl = (colleague && colleague.photoUrl) ? colleague.photoUrl : DEFAULT_GREETING_PHOTO;
+        if (photoUrl) {
+          greetingPhoto.src = photoUrl;
+          greetingPhoto.alt = `Поздравление для ${name}`;
+          photoBlock.classList.add("has-photo");
+          greetingPhoto.onerror = () => { photoBlock.classList.remove("has-photo"); };
+        } else {
+          greetingPhoto.removeAttribute("src");
+          photoBlock.classList.remove("has-photo");
+        }
+      }
+
+      result.classList.remove("hidden");
+      result.scrollIntoView({behavior:"smooth", block:"start"});
+
+      if(!running){
+        running = true;
+        startConfettiBurst();
+        requestAnimationFrame(tickSparks);
+        requestAnimationFrame(tickHearts);
+      }
+
+      tryPlayMusic();
+
+      const url = new URL(location.href);
+      url.searchParams.set("email", (email || "").trim());
+      history.replaceState({}, "", url.toString());
+    }
+
+    openBtn.addEventListener("click", () => {
+      const email = emailInput.value.trim();
+      if (!email) return;
+      const colleague = findColleague(email);
+      if (!colleague) {
+        if (confirm("Почта не найдена в списке. Показать общее поздравление?")) showGreeting(email);
+        return;
+      }
+      showGreeting(email);
+    });
+    emailInput.addEventListener("keydown", (e) => { if(e.key === "Enter") openBtn.click(); });
+
+    // ===== ПЕРЕКЛЮЧЕНИЕ ТЕМЫ (светлый / тёмный фон) =====
+    window.themeDark = localStorage.getItem("march8-theme") === "dark"; // по умолчанию светлый (если не сохранён "dark")
+    const themeToggle = $("themeToggle");
+    function applyTheme(){
+      document.body.classList.toggle("theme-dark", window.themeDark);
+      if (themeToggle) {
+        themeToggle.textContent = window.themeDark ? "Тёмный фон" : "Светлый фон";
+      }
+      localStorage.setItem("march8-theme", window.themeDark ? "dark" : "light");
+    }
+    applyTheme();
+    themeToggle.addEventListener("click", () => {
+      window.themeDark = !window.themeDark;
+      applyTheme();
+    });
+
+    // ===== КНОПКА МУЗЫКИ В ПОЗДРАВЛЕНИИ (глушить / воспроизвести) =====
+    const musicToggle = $("musicToggle");
+    const musicToggleIcon = $("musicToggleIcon");
+    let musicOn = true; // желаемое состояние: true = играть, false = выключено
+    function updateMusicButton(){
+      if (!musicToggle || !music) return;
+      musicToggleIcon.textContent = musicOn ? "🔊" : "🔇";
+      musicToggle.title = musicOn ? "Выключить музыку" : "Включить музыку";
+      musicToggle.setAttribute("aria-label", musicToggle.title);
+    }
+    if (musicToggle && music) {
+      musicToggle.addEventListener("pointerdown", (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        musicOn = !musicOn;
+        if (musicOn) {
+          music.play().then(() => { hint.style.display = "none"; }).catch(() => { musicOn = false; updateMusicButton(); });
+        } else {
+          music.pause();
+        }
+        updateMusicButton();
+      });
+      music.addEventListener("play", () => { musicOn = true; updateMusicButton(); });
+      music.addEventListener("pause", () => { musicOn = false; updateMusicButton(); });
+      updateMusicButton();
+    }
+
+    // ===== CANVAS SETUP =====
+    const sparkC = $("sparkles");
+    const heartsC= $("hearts");
+    const confC  = $("confetti");
+    const sctx = sparkC.getContext("2d");
+    const hctx = heartsC.getContext("2d");
+    const cctx = confC.getContext("2d");
+
+    let W, H;
+    function resize(){
+      W = sparkC.width = heartsC.width = confC.width = window.innerWidth;
+      H = sparkC.height= heartsC.height= confC.height = window.innerHeight;
+    }
+    window.addEventListener("resize", resize);
+    resize();
+
+    const rand = (a,b)=>Math.random()*(b-a)+a;
+
+    // ===== SPARKLES (мерцающие звёзды) =====
+    let sparks = [];
+    const SPARK_COUNT = 140;
+    const sparkHues = [0, 30, 330, 280]; // розовый, золотой, маджента
+    for(let i=0;i<SPARK_COUNT;i++){
+      sparks.push({
+        x: rand(0,W), y: rand(0,H),
+        r: rand(1, 3),
+        a: rand(0.1, 0.35),
+        vx: rand(-0.2, 0.2),
+        vy: rand(-0.15, 0.15),
+        hue: sparkHues[Math.floor(rand(0, sparkHues.length))],
+        phase: rand(0, Math.PI*2),
+        twinkle: rand(2, 5)
+      });
+    }
+
+    function drawSparkle(x, y, r, a, hue){
+      const ray = r * 1.8;
+      sctx.save();
+      sctx.translate(x, y);
+      sctx.strokeStyle = `hsla(${hue},95%,80%,${a})`;
+      sctx.lineWidth = 1.2;
+      sctx.lineCap = "round";
+      for(let i=0;i<4;i++){
+        sctx.rotate(Math.PI/2);
+        sctx.beginPath();
+        sctx.moveTo(-ray*0.15, 0);
+        sctx.lineTo(ray, 0);
+        sctx.stroke();
+      }
+      sctx.beginPath();
+      sctx.arc(0,0,r*0.5,0,Math.PI*2);
+      sctx.fillStyle = `hsla(${hue},90%,95%,${a})`;
+      sctx.fill();
+      sctx.restore();
+    }
+
+    function tickSparks(){
+      sctx.fillStyle = window.themeDark ? "rgba(0,0,0,0.06)" : "rgba(255,245,250,0.12)";
+      sctx.fillRect(0,0,W,H);
+
+      const t = Date.now() / 1000;
+      for(const p of sparks){
+        p.x += p.vx; p.y += p.vy;
+        if(p.x<0) p.x=W; if(p.x>W) p.x=0;
+        if(p.y<0) p.y=H; if(p.y>H) p.y=0;
+        p.phase += 0.02;
+        const twinkle = 0.5 + 0.5 * Math.sin(t * p.twinkle + p.phase);
+        const a = p.a * (0.4 + 0.6 * twinkle);
+        drawSparkle(p.x, p.y, p.r, a, p.hue);
+      }
+      if(running) requestAnimationFrame(tickSparks);
+    }
+
+    // ===== HEARTS (летящие сердечки с пульсом и лёгким свечением) =====
+    let hearts = [];
+    const HEART_COUNT = 95;
+    function makeHeart(randomY){
+      return {
+        x: rand(0,W),
+        y: randomY ? rand(-H, H) : rand(-80, -10),
+        vy: rand(1.2, 3),
+        vx: rand(-0.5, 0.5),
+        sway: rand(1, 2.8),
+        phase: rand(0, Math.PI*2),
+        size: rand(12, 26),
+        rot: rand(-0.6, 0.6),
+        vr: rand(-0.018, 0.018),
+        alpha: rand(0.35, 0.9),
+        pulsePhase: rand(0, Math.PI*2)
+      };
+    }
+    for(let i=0;i<HEART_COUNT;i++) hearts.push(makeHeart(true));
+
+    function drawHeart(x,y,s,rot,alpha, pulse){
+      hctx.save();
+      hctx.translate(x,y);
+      hctx.rotate(rot);
+      hctx.globalAlpha = alpha;
+      const scale = 0.92 + 0.08 * pulse;
+      hctx.scale(scale, scale);
+
+      // лёгкое свечение
+      hctx.shadowColor = "rgba(255,77,125,0.6)";
+      hctx.shadowBlur = 12;
+      hctx.beginPath();
+      const k = s/18;
+      hctx.moveTo(0, 6*k);
+      hctx.bezierCurveTo(0, -3*k, -9*k, -3*k, -9*k, 4*k);
+      hctx.bezierCurveTo(-9*k, 10*k, -3*k, 14*k, 0, 17*k);
+      hctx.bezierCurveTo(3*k, 14*k, 9*k, 10*k, 9*k, 4*k);
+      hctx.bezierCurveTo(9*k, -3*k, 0, -3*k, 0, 6*k);
+      hctx.closePath();
+      const g = hctx.createLinearGradient(-s/2, -s/2, s/2, s/2);
+      g.addColorStop(0, "rgba(255,77,125,1)");
+      g.addColorStop(0.5, "rgba(255,120,150,1)");
+      g.addColorStop(1, "rgba(255,184,77,1)");
+      hctx.fillStyle = g;
+      hctx.fill();
+      hctx.shadowBlur = 0;
+
+      hctx.globalAlpha = alpha*0.4;
+      hctx.fillStyle = "rgba(255,255,255,1)";
+      hctx.beginPath();
+      hctx.ellipse(-s*0.12, -s*0.05, s*0.10, s*0.18, 0, 0, Math.PI*2);
+      hctx.fill();
+
+      hctx.restore();
+    }
+
+    function tickHearts(){
+      hctx.clearRect(0,0,W,H);
+      for(const h of hearts){
+        h.phase += 0.025*h.sway;
+        h.x += h.vx + Math.sin(h.phase)*1.4;
+        h.y += h.vy;
+        h.rot += h.vr;
+        h.pulsePhase += 0.08;
+        const pulse = Math.sin(h.pulsePhase) * 0.5 + 0.5;
+        drawHeart(h.x,h.y,h.size,h.rot,h.alpha, pulse);
+
+        if(h.y > H + 70) Object.assign(h, makeHeart(false));
+        if(h.x < -80) h.x = W+80;
+        if(h.x > W+80) h.x = -80;
+      }
+      if(running) requestAnimationFrame(tickHearts);
+    }
+
+    // ===== CONFETTI (взрыв при открытии: полоски + квадраты, дольше и ярче) =====
+    let confetti = [];
+    const confettiHues = [0, 30, 330, 280, 45];
+    function startConfettiBurst(){
+      confetti = [];
+      const count = 420;
+      const cx = W/2;
+      const topY = H*0.2;
+      for(let i=0;i<count;i++){
+        const angle = rand(-Math.PI*0.4, Math.PI*0.4) + (i % 2 ? 0 : Math.PI);
+        const speed = rand(4, 11);
+        confetti.push({
+          x: rand(cx - W*0.4, cx + W*0.4),
+          y: rand(topY - 30, topY + 80),
+          vx: Math.cos(angle) * speed * rand(0.6, 1.2) + rand(-2, 2),
+          vy: Math.sin(angle) * speed * rand(0.5, 1) - rand(1, 4),
+          g: rand(0.04, 0.09),
+          w: rand(4, 10),
+          h: rand(2, 5),
+          strip: Math.random() > 0.4,
+          rot: rand(0, Math.PI*2),
+          vr: rand(-0.2, 0.2),
+          hue: confettiHues[Math.floor(rand(0, confettiHues.length))],
+          sat: rand(85, 100),
+          life: Math.floor(rand(120, 200)),
+          maxLife: 200
+        });
+      }
+      confTick();
+    }
+
+    function confTick(){
+      cctx.clearRect(0,0,W,H);
+      confetti = confetti.filter(p=>p.life>0);
+      for(const p of confetti){
+        p.x += p.vx; p.y += p.vy;
+        p.vy += p.g*60;
+        p.vx *= 0.998;
+        p.rot += p.vr;
+        p.life--;
+        const norm = p.life / p.maxLife;
+        const alpha = Math.min(1, norm * 1.2) * (1 - (1-norm)*(1-norm));
+
+        cctx.save();
+        cctx.translate(p.x, p.y);
+        cctx.rotate(p.rot);
+        const w = p.strip ? Math.max(p.w, p.h*2) : p.w;
+        const h = p.strip ? Math.min(p.w, p.h) : p.h;
+        cctx.fillStyle = `hsla(${p.hue},${p.sat}%,65%,${alpha})`;
+        cctx.fillRect(-w/2, -h/2, w, h);
+        cctx.restore();
+      }
+      if(confetti.length) requestAnimationFrame(confTick);
+      else cctx.clearRect(0,0,W,H);
+    }
+
+    // ===== MUSIC =====
+    async function tryPlayMusic(){
+      if(!music) return;
+      try{
+        await music.play();
+        hint.style.display = "none";
+      }catch{
+        hint.style.display = "";
+      }
+    }
+
+    // Включить музыку по клику можно только после открытия поздравления (ограничение браузера)
+    window.addEventListener("pointerdown", (e) => {
+      if (e.target.closest("#musicToggle")) return;
+      if(music && music.paused && !result.classList.contains("hidden")){
+        music.play().then(()=> hint.style.display="none").catch(()=>{});
+      }
+    });
+
+    // ===== START FROM QUERY (?email=...) =====
+    (function init(){
+      const url = new URL(location.href);
+      const email = url.searchParams.get("email");
+      if (email && email.trim()) {
+        emailInput.value = email.trim();
+        showGreeting(email);
+      }
+    })();
+
+    // ===== RUN FLAG =====
+    let running = false;
+  </script>
+</body>
+</html>
