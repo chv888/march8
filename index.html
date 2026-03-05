@@ -341,23 +341,9 @@
 
   <script>
     // ===== ТАБЛИЦА: почта → имя, текст поздравления (между "Дорогая ..." и подписью), опционально фото =====
+    // Поздравление открывается только для почт из этого списка. Пробелы в вводе не учитываются.
     const COLLEAGUES_TABLE = [
-      { email: "test@skillbox.ru", name: "Имя", text: "Поздравляем с 8 марта 🌸\nУспехов и вдохновения!", photoUrl: "photos/0.png" },
-      { email: "ekaterina.sinkova@skillbox.ru", name: "Екатерина", text: "Поздравляем с 8 марта 🌸\nСпасибо за твою энергию, внимательность и то, что ты делаешь наш общий результат сильнее.\nПусть будет больше радости, лёгкости и приятных сюрпризов — и дома, и на работе.", photoUrl: "" },
-      { email: "natalya.kozlova@skillbox.ru", name: "Наталья", text: "Поздравляем с 8 марта 🌸\nСпасибо за твою энергию и то, что ты делаешь наш общий результат сильнее.\nПусть будет больше радости и приятных сюрпризов!", photoUrl: "" },
-      { email: "elena.shtumpf@skillbox.ru", name: "Елена", text: "Поздравляем с 8 марта 🌸\nПусть будет больше радости, лёгкости и вдохновения — и дома, и на работе.", photoUrl: "" },
-      { email: "anastasiya.suprun@skillbox.ru", name: "Анастасия", text: "Поздравляем с 8 марта 🌸\nСпасибо за твою энергию и то, что ты с нами. Успехов и вдохновения!", photoUrl: "" },
-      { email: "valeriya.ustyan@skillbox.ru", name: "Валерия", text: "Поздравляем с 8 марта 🌸\nПусть будет больше радости и приятных сюрпризов. С теплом!", photoUrl: "" },
-      { email: "oksana@skillbox.ru", name: "Оксана", text: "Поздравляем с 8 марта 🌸\nУспехов и вдохновения!", photoUrl: "" },
-      { email: "diana@skillbox.ru", name: "Диана", text: "Поздравляем с 8 марта 🌸\nПусть будет больше радости и лёгкости!", photoUrl: "" },
-      { email: "aleksandra@skillbox.ru", name: "Александра", text: "Поздравляем с 8 марта 🌸\nСпасибо за твою энергию. Успехов и вдохновения!", photoUrl: "" },
-      { email: "naira@skillbox.ru", name: "Наира", text: "Поздравляем с 8 марта 🌸\nПусть будет больше радости и приятных сюрпризов!", photoUrl: "" },
-      { email: "tatiana@skillbox.ru", name: "Татьяна", text: "Поздравляем с 8 марта 🌸\nУспехов и вдохновения!", photoUrl: "" },
-      { email: "alena@skillbox.ru", name: "Алена", text: "Поздравляем с 8 марта 🌸\nПусть будет больше радости и лёгкости!", photoUrl: "" },
-      { email: "marina@skillbox.ru", name: "Марина", text: "Поздравляем с 8 марта 🌸\nСпасибо за то, что ты с нами. Успехов!", photoUrl: "" },
-      { email: "svetlana@skillbox.ru", name: "Светлана", text: "Поздравляем с 8 марта 🌸\nПусть будет больше радости и вдохновения!", photoUrl: "" },
-      { email: "kristina@skillbox.ru", name: "Кристина", text: "Поздравляем с 8 марта 🌸\nУспехов и приятных сюрпризов!", photoUrl: "" },
-      { email: "darya@skillbox.ru", name: "Дарья", text: "Поздравляем с 8 марта 🌸\nПусть будет больше радости и лёгкости!", photoUrl: "" }
+      { email: "test@skillbox.ru", name: "Имя", text: "Поздравляем с 8 марта 🌸\nУспехов и вдохновения!", photoUrl: "photos/0.png" }
     ];
 
     const SIGNATURE = "С теплом,\nваши коллеги ❤️";
@@ -375,9 +361,13 @@
     const greetingPhoto = $("greetingPhoto");
     const photoBlock = document.querySelector(".photo-block");
 
+    function normalizeEmail(email) {
+      return (email || "").trim().toLowerCase().replace(/\s+/g, "");
+    }
     function findColleague(email){
-      const normalized = (email || "").trim().toLowerCase();
-      return COLLEAGUES_TABLE.find(r => r.email.toLowerCase() === normalized);
+      const normalized = normalizeEmail(email);
+      if (!normalized) return null;
+      return COLLEAGUES_TABLE.find(r => r.email.toLowerCase().replace(/\s+/g, "") === normalized);
     }
 
     function showGreeting(email){
@@ -422,14 +412,14 @@
     }
 
     openBtn.addEventListener("click", () => {
-      const email = emailInput.value.trim();
-      if (!email) return;
-      const colleague = findColleague(email);
+      const raw = emailInput.value.trim();
+      if (!raw) return;
+      const colleague = findColleague(raw);
       if (!colleague) {
-        if (confirm("Почта не найдена в списке. Показать общее поздравление?")) showGreeting(email);
+        alert("Почта не найдена в списке. Поздравление доступно только для зарегистрированных адресов.");
         return;
       }
-      showGreeting(email);
+      showGreeting(raw);
     });
     emailInput.addEventListener("keydown", (e) => { if(e.key === "Enter") openBtn.click(); });
 
@@ -702,7 +692,7 @@
     (function init(){
       const url = new URL(location.href);
       const email = url.searchParams.get("email");
-      if (email && email.trim()) {
+      if (email && findColleague(email)) {
         emailInput.value = email.trim();
         showGreeting(email);
       }
