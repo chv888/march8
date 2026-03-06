@@ -416,10 +416,18 @@
     function showGreeting(email){
       const colleague = findColleague(email);
       const name = colleague ? colleague.name : "коллега";
-      const customText = colleague && colleague.text
+      const rawText = colleague && colleague.text
         ? colleague.text
         : "Поздравляем с 8 марта 🌸\nПусть будет больше радости, лёгкости и приятных сюрпризов — и дома, и на работе.";
+      // Нормализуем переносы строк: удаляем \r и превращаем литеральные \"\\n\" в реальные переводы строк
+      const customText = (rawText || "")
+        .replace(/\r/g, "")
+        .replace(/\\n/g, "\n");
       const fullMessage = `${customText}\n\n${SIGNATURE}`;
+
+      // #region agent log
+      fetch('http://127.0.0.1:7577/ingest/e74120f8-e659-4846-8f0f-261fae909319',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'bbf885'},body:JSON.stringify({sessionId:'bbf885',runId:'pre-fix',hypothesisId:'H2',location:'index.html:showGreeting',message:'greeting text raw',data:{emailNorm:normalizeEmail(email),name,customTextHasLiteralBackslashN:customText.includes('\\\\n'),customTextNewlineCount:(customText.match(/\n/g)||[]).length,customTextSample:customText.slice(0,160),fullMessageHasLiteralBackslashN:fullMessage.includes('\\\\n'),fullMessageNewlineCount:(fullMessage.match(/\n/g)||[]).length},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
 
       titleLine.textContent = `Дорогая ${name}, с 8 марта! ✨`;
       textLine.textContent  = fullMessage;
@@ -458,6 +466,9 @@
       const raw = emailInput.value.trim();
       if (!raw) return;
       const colleague = findColleague(raw);
+      // #region agent log
+      fetch('http://127.0.0.1:7577/ingest/e74120f8-e659-4846-8f0f-261fae909319',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'bbf885'},body:JSON.stringify({sessionId:'bbf885',runId:'pre-fix',hypothesisId:'H3',location:'index.html:openBtn',message:'open attempt',data:{raw,normalized:normalizeEmail(raw),found:!!colleague},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       if (!colleague) {
         alert("Почта не найдена в списке. Поздравление доступно только для зарегистрированных адресов.");
         return; // общее поздравление не показываем
@@ -467,14 +478,17 @@
     emailInput.addEventListener("keydown", (e) => { if(e.key === "Enter") openBtn.click(); });
 
     // ===== ПЕРЕКЛЮЧЕНИЕ ТЕМЫ (светлый / тёмный фон) =====
-    window.themeDark = localStorage.getItem("march8-theme") === "dark"; // по умолчанию светлый (если не сохранён "dark")
+    // Всегда начинаем со светлой темы; выбор не запоминаем между перезагрузками.
+    window.themeDark = false;
     const themeToggle = $("themeToggle");
     function applyTheme(){
+      // #region agent log
+      fetch('http://127.0.0.1:7577/ingest/e74120f8-e659-4846-8f0f-261fae909319',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'bbf885'},body:JSON.stringify({sessionId:'bbf885',runId:'pre-fix',hypothesisId:'H1',location:'index.html:applyTheme',message:'theme apply',data:{themeDark:window.themeDark},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       document.body.classList.toggle("theme-dark", window.themeDark);
       if (themeToggle) {
         themeToggle.textContent = window.themeDark ? "Тёмный фон" : "Светлый фон";
       }
-      localStorage.setItem("march8-theme", window.themeDark ? "dark" : "light");
     }
     applyTheme();
     themeToggle.addEventListener("click", () => {
